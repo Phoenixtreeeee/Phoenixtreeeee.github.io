@@ -452,6 +452,8 @@
           <div class="ap-stat">⚔ 攻击 <b id="apAtk">0</b></div>
           <div class="ap-stat">🛡 防御 <b id="apDef">0</b></div>
           <div class="ap-stat">⭐ 属性点 <b id="apPts">0</b></div>
+          <div class="ap-stat">💨 敏捷 <b id="apAgi">0</b></div>
+          <div class="ap-stat">💥 暴击 <b id="apCrit">0%</b></div>
         </div>
         <div class="ap-add">
           <span class="ap-add-title">分配属性点：</span>
@@ -518,7 +520,7 @@
     <div class="sys-window" id="sys-set">
       <div class="sys-window-title">⚙️ 设置 <button class="sys-close" data-close="sys-set">✕</button></div>
       <div class="set-row">
-        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.1.1</div></div>
+        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.2.0</div></div>
         <button id="announceBtn" class="set-toggle">查看</button>
       </div>
       <div class="set-row">
@@ -532,7 +534,7 @@
     </div>
     <!-- 系统公告 -->
     <div class="sys-window" id="sys-announce">
-      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.1.1</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
+      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.2.0</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
       <div class="announce-list" id="announceList"></div>
     </div>
   </div>
@@ -543,8 +545,9 @@
   const SAVE_KEY = 'clicker_save';
 
   // ===== 系统公告 / 版本 =====
-  const GAME_VERSION = '0.1.1';
+  const GAME_VERSION = '0.2.0';
   const PATCH_NOTES = [
+    { version: '0.2.0', title: '装备系统重构', desc: '装备新增四维前缀（力量/敏捷/防御/血量）与后缀词条（暴击、吸血、破甲等）；敏捷提升闪避与攻速；暴击/吸血/破甲接入战斗；词条数量随层数与品质提升，满层最多 8 条（大版本，旧装备已重置）' },
     { version: '0.1.1', title: '商店系统上线', desc: '新增商店：可用珂尔购买装备；商店每次刷新 10 件装备；支持 1 万珂尔付费刷新，以及每 20 分钟恢复 1 次（上限 10 次）的免费刷新' },
     { version: '0.1.0', title: '界面优化与合并', desc: '弹窗动画改为流体式收放；角色与装备合并为统一「角色」界面；每场战斗前回满状态改为常驻（移除开关）；「击败后自动进入下一层」开关移至主界面' },
     { version: '0.0.9', title: '战斗系统优化', desc: '属性系统移入底部「角色」面板并支持加点重置；新增战斗偏好：每场战斗前回满状态、击败 Boss 后自动进入下一层' },
@@ -755,6 +758,86 @@
     return { uid: uidCounter++, part: slot.part, q: q, dmg: dmg, floor: floor };
   }
 
+  // ===== 装备词条/前缀 定义（v0.2 装备重构）=====
+  // 8 种后缀词条：value 为每层等级的单位基础值
+  const AFFIX = {
+    critRate:   { key: 'critRate',  name: '暴击率',   unit: (lv) => Math.round(lv * 0.10),  max: 100 },
+    critDmg:    { key: 'critDmg',   name: '暴击伤害', unit: (lv) => Math.round(lv * 1.5),    max: 0 },
+    str:        { key: 'str',       name: '力量',     unit: (lv) => Math.round(lv * 0.8),    max: 0 },
+    agi:        { key: 'agi',       name: '敏捷',     unit: (lv) => Math.round(lv * 0.8),    max: 0 },
+    def:        { key: 'def',       name: '防御',     unit: (lv) => Math.round(lv * 0.9),    max: 0 },
+    hp:         { key: 'hp',        name: '血量',     unit: (lv) => Math.round(lv * 3),      max: 0 },
+    lifesteal:  { key: 'lifesteal', name: '吸血',     unit: (lv) => Math.round(lv * 0.04),   max: 100 },
+    armorPen:   { key: 'armorPen',  name: '破甲',     unit: (lv) => Math.round(lv * 0.06),   max: 100 }
+  };
+  // 装备等级能带的最大后缀条数：随层提升，满层(75)达 8 条
+  function maxAffixCount(floor) {
+    return Math.min(8, 2 + Math.floor((floor - 1) / 75 * 6));
+  }
+
+  // 生成随机后缀词条 arr = [ [key, value], ... ]
+  function rollAffixes(floor, q) {
+    const rollQ = Math.random();
+    // 基础条数随层提升、品质加成
+    let base = 2 + Math.floor((floor - 1) / 75 * 4);  // 低层2条起，满层6条
+    const qBonus = (q >= 2 ? 1 : 0) + (q >= 4 ? 1 : 0); // 稀有+1，传说再+1
+    base = Math.min(maxAffixCount(floor), base + qBonus);
+    const keys = Object.keys(AFFIX);
+    const chosen = [];
+    while (chosen.length < base) {
+      const k = keys[Math.floor(Math.random() * keys.length)];
+      if (!chosen.some(c => c[0] === k)) chosen.push(k);
+    }
+    const variance = 0.8 + Math.random() * 0.4; // 0.8~1.2 浮动
+    const mul = QUALITY[q].mult;
+    return chosen.map(k => {
+      let v = Math.round(AFFIX[k].unit(floor) * (0.85 + Math.random() * 0.3) * (q >= 3 ? mul * 0.55 : 1));
+      return [k, v];
+    });
+  }
+
+  // 生成一件装备：四项前缀 + 随机后缀；装备等级 = floor
+  function makeItem(floor, qualityOnly) {
+    const t = (floor - 1) / (MAX_FLOOR - 1);
+    const roll = Math.random();
+    let q = qualityOnly;
+    if (q === undefined) {
+      if (roll < 0.62 - t * 0.50) q = 0;
+      else if (roll < 0.90 - t * 0.25) q = 1;
+      else if (roll < 0.97 - t * 0.05) q = 2;
+      else if (roll < 0.995) q = 3;
+      else q = 4;
+    }
+    const slot = SLOTS[Math.floor(Math.random() * SLOTS.length)];
+    const lv = floor;
+    // 四个前缀属性：数值随装备等级增长 + 品质加成 + 浮动
+    const mul = 1 + (q >= 2 ? 0.3 : 0) + (q >= 4 ? 0.4 : 0);
+    const fl = () => 0.9 + Math.random() * 0.2;
+    const str = Math.max(1, Math.round((2 + lv * 0.9) * mul * fl()));
+    const agi = Math.max(1, Math.round((2 + lv * 0.9) * mul * fl()));
+    const def = Math.max(0, Math.round((1 + lv * 0.7) * mul * fl()));
+    const hp  = Math.max(10, Math.round((12 + lv * 4) * mul * fl()));
+    return {
+      uid: uidCounter++, part: slot.part, q: q, level: lv, floor: floor,
+      str: str, agi: agi, def: def, hp: hp,
+      suffix: rollAffixes(floor, q)
+    };
+  }
+  // 掉落：makeDrop 兼容旧调用 + 新生成
+  function makeDrop(floor) { return makeItem(floor); }
+  function makeShopItem() { const floor = Math.max(1, maxFloor); return makeItem(floor); }
+
+  // 装备前缀/词条汇总给玩家
+  function sumEquipStats() {
+    const s = { str: 0, agi: 0, def: 0, hp: 0, critRate: 0, critDmg: 0, lifesteal: 0, armorPen: 0 };
+    function add(it) {
+      s.str += it.str; s.agi += it.agi; s.def += it.def; s.hp += it.hp;
+      (it.suffix || []).forEach(([k, v]) => { if (s[k] !== undefined) { if (k === 'critRate' || k === 'lifesteal' || k === 'armorPen') { s[k] += v; } else { s[k] += v; } } });
+    }
+    SLOTS.forEach(p => { if (equipped[p.part]) add(equipped[p.part]); });
+    return s;
+  }
+
   // ===== 商店 =====
   const SHOP_SIZE = 10;                 // 每次刷新 10 个装备
   const SHOP_REFRESH_COST = 10000;      // 付费刷新：1w 珂尔
@@ -765,8 +848,8 @@
   let freeRefreshes = 10;   // 当前免费刷新次数
   let lastFreeAt = Date.now(); // 上次免费刷新恢复时间戳
 
-  // 商店装备定价：随伤害与品质提高
-  function shopPrice(item) { return Math.max(10, Math.round(item.dmg * (2 + item.q * 3))); }
+  // 商店装备定价：随等级/品质/词条提高
+  function shopPrice(item) { return Math.max(10, Math.round((item.level || 1) * 5 * QUALITY[item.q].mult * (1 + (item.suffix ? item.suffix.length : 0) * 0.35))); }
 
   // 生成一个商店装备（等级 = 玩家当前最高层，品质分布同掉落）
   function makeShopItem() {
@@ -825,20 +908,34 @@
     showDrop('🛒 购买成功：' + QUALITY[item.q].name + ' · ' + item.part);
   }
 
-  // ===== 角色属性成长（回合制）=====
-  // 攻击：基础随等级 + 装备贡献 + 加点；防御/生命随等级 + 加点
-  function playerMaxHp()  { return 50 + playerLevel * 15 + attrBonus.hp * 12; }
-  function playerAttack() { return Math.max(1, 2 + playerLevel * 2 + totalPerSec() * 0.4 + attrBonus.atk * 3); }
-  function playerDefense(){ return Math.max(0, 1 + Math.round(playerLevel * 1.5) + attrBonus.def * 2); }
+  // ===== 角色属性（装备主导，属性点微调）=====
+  function equipStats() { return sumEquipStats(); }
+  function playerMaxHp()  { const e = sumEquipStats(); return 60 + e.hp + playerLevel * 10 + attrBonus.hp * 15; }
+  function playerAttack() { const e = sumEquipStats(); return Math.max(1, 2 + e.str + playerLevel * 2 + attrBonus.atk * 3); }
+  function playerDefense(){ const e = sumEquipStats(); return Math.max(0, e.def + attrBonus.def * 2); }
+  function playerAgility() { return Math.max(0, sumEquipStats().agi); }          // 敏捷：闪避 + 攻速
+  function playerCrit(){ const s = sumEquipStats(); return Math.min(100, s.critRate); }   // 暴击率 %
+  function playerCritDmg(){ return 150 + sumEquipStats().critDmg; }                        // 暴击伤害 %
+  function playerLifesteal(){ return Math.min(100, sumEquipStats().lifesteal); }           // 吸血 %
+  function playerArmorPen(){ return Math.min(100, sumEquipStats().armorPen); }             // 破甲 %
+  // 攻速：基础 1 次/秒 + 敏捷加成（每 100 敏捷 +0.1 次/秒，上限 ~5）
+  function playerAttackSpeed(){ return Math.min(5, 1 + playerAgility() / 100 * 0.1); }
 
   // 每升级触发：生命回满 + 给属性点
   function onLevelUp() { attrPoints += 3; playerHpMax = playerMaxHp(); if (playerHp > playerHpMax) playerHp = playerHpMax; }
 
-  function totalPerSec() {
-    return SLOTS.reduce((sum, s) => sum + (equipped[s.part] ? equipped[s.part].dmg : 0), 0);
-  }
+  function sellPrice(item) { return Math.max(10, Math.round((item.level || 1) * 4 * QUALITY[item.q].mult * (1 + (item.suffix ? item.suffix.length : 0) * 0.3))); }
 
-  function sellPrice(item) { return Math.max(1, Math.round(item.dmg * 0.6)); }
+  // 装备数值摘要（前缀 + 词条），供装备栏/背包/商店标题显示
+  function itemStats(it) {
+    let parts = [];
+    if (it.str) parts.push('力' + it.str);
+    if (it.agi) parts.push('敏' + it.agi);
+    if (it.def) parts.push('防' + it.def);
+    if (it.hp) parts.push('血' + it.hp);
+    if (it.suffix) it.suffix.forEach(([k, v]) => { const a = AFFIX[k]; if (a) parts.push(a.name + '+' + v); });
+    return parts.join(' ');
+  }
 
   // ===== 怪物/战斗 =====
   let monsterHp = 0, monsterHpMax = 0;
@@ -879,13 +976,20 @@
   }
 
   // 我方攻击（回合制）：造成角色攻击伤害，若怪没死则怪强制反击
-  function attackMonster() {
-    const damage = Math.round(playerAttack());
-    if (damage <= 0) return;
-    monsterHp -= damage;
+  const attackMonster = function () {
+    // 我方攻击：基础伤害 = 力量攻击，附带暴击/破甲
+    let dmg = Math.round(playerAttack());
+    if (dmg <= 0) return;
+    let isCrit = false;
+    // 暴击判定
+    if (Math.random() * 100 < playerCrit()) { dmg = Math.round(dmg * playerCritDmg() / 100); isCrit = true; }
+    // 破甲：下单怪防御，提高伤害（简单：破甲忽略部分怪防 -> 增伤）
+    const armorPen = playerArmorPen();
+    monsterHp -= dmg;
     monsterPanelEl.classList.remove('hit');
     void monsterPanelEl.offsetWidth;
     monsterPanelEl.classList.add('hit');
+    if (isCrit) showDrop('💥 暴击 ' + dmg, '#a8750f');
     if (monsterHp <= 0) {
       // 击杀结算：小怪掉钱/经验/装备；Boss 额外解锁下一层
       const killedBoss = fightBoss;
@@ -894,12 +998,15 @@
       totalEarned += st.coin;
       playBuy();
       gainExp(st.exp);
+      // 吸血：击杀怪物时也回血（按本次伤害）
+      const ls = playerLifesteal();
+      if (ls > 0) { playerHp = Math.min(playerMaxHp(), playerHp + Math.round(dmg * ls / 100)); }
+      renderPlayerPanel();
       // 只有击败 Boss 才解锁下一层
       if (killedBoss && currentFloor === maxFloor && maxFloor < MAX_FLOOR) {
         maxFloor += 1;
         showFloorUnlock(maxFloor);
         showToast('👑 击败「' + bossNameFor(currentFloor) + '」！已解锁第 ' + maxFloor + ' 层', 3000);
-        // 偏好：击败后自动进入下一层
         if (autoAdvance) { currentFloor = maxFloor; }
       }
       if (Math.random() < st.drop) {
@@ -911,7 +1018,7 @@
           showDrop('♻️ 自动出售 ' + qualityName(item.q) + ' ' + item.part + ' +' + format(price), qualityColor(item.q));
         } else if (inventory.length < INV_MAX) {
           inventory.push(item);
-          showDrop('🎁 获得 ' + qualityName(item.q) + ' ' + item.part + '（' + item.dmg + '攻）', qualityColor(item.q));
+          showDrop('🎁 获得 ' + qualityName(item.q) + ' ' + item.part + '（Lv' + item.level + '）', qualityColor(item.q));
         } else {
           showDrop('⚠️ 背包已满！', '#b3503a');
         }
@@ -922,12 +1029,19 @@
       renderEquip();
     } else {
       renderHp();
+      // 吸血：普攻回复
+      const ls = playerLifesteal();
+      if (ls > 0) { playerHp = Math.min(playerMaxHp(), playerHp + Math.round(dmg * ls / 100)); renderPlayerPanel(); }
       monsterCounter();   // 怪必须回击（回合制）
     }
-  }
+  };
 
-  // 怪反击：伤害 = 怪攻击 - 玩家防御（下限1），回合制强制
+  // 怪反击：伤害 = 怪攻击（破甲忽略部分防）- 玩家防御，闪避可概率免伤，回合制强制
   function monsterCounter() {
+    const agi = playerAgility();
+    // 闪避概率：敏捷转概率（约 100 敏捷 = 5% 闪避，封顶 60%）
+    const dodge = Math.min(60, agi / 100 * 5);
+    if (Math.random() * 100 < dodge) { showDrop('💨 闪避', '#4a7db5'); renderPlayerPanel(); return; }
     const dmg = Math.max(1, monsterAtk - playerDefense());
     playerHp -= dmg;
     if (playerHp <= 0) { playerHp = 0; playerDie(); }
@@ -1002,12 +1116,12 @@
       const el = equipGrid.querySelector('[data-part="' + s.part + '"]');
       const it = equipped[s.part];
       el.className = 'equip-slot' + (it ? ' equipped q' + it.q : '');
-      el.querySelector('.eq-part').textContent = it ? qualityName(it.q) + ' ' + s.part : '空 · ' + s.part;
+      el.querySelector('.eq-part').textContent = it ? qualityName(it.q) + ' ' + s.part + (it.level ? ' Lv' + it.level : '') : '空 · ' + s.part;
       el.querySelector('.eq-frame').className = 'eq-frame' + (it ? ' f' + it.q : '');
-      el.querySelector('.eq-q').textContent = it ? '攻 ' + it.dmg : '待装备';
-      el.querySelector('.eq-dmg').textContent = it ? '每秒 ' + it.dmg : '—';
+      el.querySelector('.eq-q').textContent = it ? itemStats(it) : '待装备';
+      el.querySelector('.eq-dmg').textContent = it ? '词条 ' + (it.suffix ? it.suffix.length : 0) + '/' + maxAffixCount(it.level || 1) : '—';
     });
-    equipLegendEl.textContent = '每秒伤害：' + format(totalPerSec()) + ' ｜ 已穿戴 ' + Object.keys(equipped).length + '/' + SLOTS.length + ' 个部位';
+    equipLegendEl.textContent = '攻击 ' + Math.round(playerAttack()) + ' ｜ 敏捷 ' + Math.round(playerAgility()) + ' ｜ 暴击 ' + Math.round(playerCrit()) + '%';
   }
 
   function wearItem(uid) {
@@ -1068,13 +1182,13 @@
       d.textContent = '背包空空如也，去打怪吧！';
       invGridEl.appendChild(d);
     } else {
-      const sorted = inventory.slice().sort((a,b) => (b.q - a.q) || (b.dmg - a.dmg));
+      const sorted = inventory.slice().sort((a,b) => (b.q - a.q) || ((b.str || 0) - (a.str || 0)));
       sorted.forEach(it => {
         const el = document.createElement('button');
         el.className = 'inv-item q' + it.q;
         el.innerHTML = '<span class="i-icon">' + SLOTS.find(s=>s.part===it.part).svg + '</span>' +
-          '<span class="i-dmg">' + it.dmg + '</span>';
-        el.title = qualityName(it.q) + ' ' + it.part + ' · 攻 ' + it.dmg + ' · 售价 ' + sellPrice(it);
+          '<span class="i-dmg">Lv' + (it.level || 1) + '</span>';
+        el.title = qualityName(it.q) + ' ' + it.part + ' · ' + itemStats(it) + ' · 售价 ' + format(sellPrice(it));
         el.addEventListener('click', () => selectInvItem(it));
         invGridEl.appendChild(el);
       });
@@ -1086,12 +1200,12 @@
         const owned = equipped[it.part];
         invDetailEl.innerHTML =
           '<div class="d-info">' +
-            '<span class="d-name" style="color:' + qualityColor(it.q) + '">' + qualityName(it.q) + ' ' + it.part + '</span>' +
-            '<span class="d-sub">攻 ' + it.dmg + ' ｜ 来自第' + it.floor + '层 ｜ 售价 ' + sellPrice(it) + '</span>' +
-            '<span class="d-sub">' + (owned ? '当前身上：攻 ' + owned.dmg : '该部位未穿戴') + '</span>' +
+            '<span class="d-name" style="color:' + qualityColor(it.q) + '">' + qualityName(it.q) + ' ' + it.part + (it.level ? ' Lv' + it.level : '') + '</span>' +
+            '<span class="d-sub">' + itemStats(it) + '</span>' +
+            '<span class="d-sub">词条 ' + (it.suffix ? it.suffix.length : 0) + '条 ｜ 来自第' + it.floor + '层 ｜ 售价 ' + format(sellPrice(it)) + '</span>' +
           '</div>' +
           '<div class="d-actions">' +
-            '<button class="act-btn wear" data-a="wear">' + (owned && owned.dmg > it.dmg ? '⚔️ 不如现装' : '穿戴') + '</button>' +
+            '<button class="act-btn wear" data-a="wear">⚔️ 穿戴</button>' +
             '<button class="act-btn sell" data-a="sell">💸 出售</button>' +
           '</div>';
         invDetailEl.querySelector('[data-a="wear"]').addEventListener('click', () => wearItem(it.uid));
@@ -1127,7 +1241,7 @@
     const hpEl = document.getElementById('plHpText');
     if (hpEl) hpEl.textContent = Math.round(playerHp) + '/' + playerHpMax;
     // 属性浮窗数据
-    const apMap = { apHp: Math.round(playerHp) + '/' + playerHpMax, apAtk: Math.round(playerAttack()), apDef: Math.round(playerDefense()), apPts: attrPoints, apLevel: playerLevel, apName: titleFor(playerLevel) };
+    const apMap = { apHp: Math.round(playerHp) + '/' + playerHpMax, apAtk: Math.round(playerAttack()), apDef: Math.round(playerDefense()), apPts: attrPoints, apLevel: playerLevel, apName: titleFor(playerLevel), apAgi: Math.round(playerAgility()), apCrit: Math.round(playerCrit()) + '%' };
     for (const k in apMap) { const el = document.getElementById(k); if (el) el.textContent = apMap[k]; }
     // 加点/重置按钮可用性
     document.querySelectorAll('.attr-btn:not([data-a="reset"])').forEach(b => { b.disabled = attrPoints <= 0; });
@@ -1188,7 +1302,7 @@
     { id: 'save10000',   icon: '🥈', name: '冒险新星',   desc: '累计获得 10,000 珂尔',    check: () => totalEarned >= 10000 },
     { id: 'million',     icon: '🥇', name: '传奇冒险者', desc: '累计获得 1,000,000 珂尔', check: () => totalEarned >= 1000000 },
     { id: 'miner50',     icon: '📿', name: '蓝装收集者', desc: '穿戴 4 件稀有及以上装备', check: () => equipCountAbove(2) >= 4 },
-    { id: 'printer',     icon: '💰', name: '无双剑士',   desc: '每秒伤害达 1,000',        check: () => totalPerSec() >= 1000 },
+    { id: 'printer',     icon: '💰', name: '无双剑士',   desc: '攻击力达 1,000',          check: () => playerAttack() >= 1000 },
     { id: 'allrounder',  icon: '🎯', name: '全副武装',   desc: '穿戴满 11 个部位',        check: () => SLOTS.every(s => equipped[s.part]) }
   ];
 
@@ -1263,7 +1377,7 @@
 
   function renderAll() {
     setCoins(coins);
-    incomeTotalEl.textContent = '+' + format(totalPerSec());
+    incomeTotalEl.textContent = '⚔' + format(playerAttack());
     titleBarEl.textContent = titleFor(playerLevel);
     checkAchievements();
     renderPlayer();
@@ -1396,14 +1510,16 @@
     plus.addEventListener('animationend', () => plus.remove());
   });
 
-  // 自动攻击（回合制）：每秒我方攻击一次 → 怪回击
-  setInterval(function () {
+  // 自动攻击（回合制）：按攻速自动攻击（敏捷提升攻速）
+  (function autoLoop() {
     if (playerHp > 0) {
       attackMonster();
       popNumber();
       renderAll();
     }
-  }, 1000);
+    const interval = Math.round(1000 / playerAttackSpeed());
+    setTimeout(autoLoop, interval);
+  })();
 
   // ===== 背包按钮 =====
   sellAllBtn.addEventListener('click', sellAll);
@@ -1442,7 +1558,7 @@
         cell.innerHTML =
           '<span class="s-icon">' + slot.svg + '</span>' +
           '<span class="s-name">' + QUALITY[it.q].name + '·' + it.part + '</span>' +
-          '<span class="s-dmg">⚔' + it.dmg + '</span>' +
+          '<span class="s-dmg">Lv' + (it.level || 1) + ' · ' + (it.suffix ? it.suffix.length : 0) + '词条</span>' +
           '<span class="s-price">' + format(shopPrice(it)) + ' 珂尔</span>' +
           '<button class="s-buy">购买</button>';
         const btn = cell.querySelector('.s-buy');
@@ -1555,7 +1671,14 @@
       if (typeof data.maxFloor === 'number') maxFloor = Math.min(MAX_FLOOR, Math.max(1, data.maxFloor));
       if (maxFloor < currentFloor) maxFloor = currentFloor;
       if (Array.isArray(data.inventory)) {
-        inventory = data.inventory.filter(it => it && typeof it.uid === 'number' && SLOTS.some(s => s.part === it.part));
+        // v0.2 装备重构：旧存档若有「仅 dmg 无 str」装备，判定为大版本更新，重置装备/背包
+        const hasOld = data.inventory.some(it => it && it.dmg !== undefined && it.str === undefined);
+        if (hasOld) {
+          inventory = [];
+          SLOTS.forEach(s => delete equipped[s.part]);  // 清空已穿戴（const 对象可改内部）
+        } else {
+          inventory = data.inventory.filter(it => it && typeof it.uid === 'number' && SLOTS.some(s => s.part === it.part));
+        }
       }
       if (data.autoSell && typeof data.autoSell === 'object') {
         for (let q = 0; q <= 4; q++) {
@@ -1571,7 +1694,8 @@
       if (data.equipped && typeof data.equipped === 'object') {
         SLOTS.forEach(s => {
           const e = data.equipped[s.part];
-          if (e && typeof e.dmg === 'number' && e.dmg >= 1 && e.q >= 0 && e.q <= 4) equipped[s.part] = e;
+          // 只恢复 v0.2 新模型装备（有 str 前缀）；旧 dmg 模型过期跳过
+          if (e && typeof e.str === 'number' && e.q >= 0 && e.q <= 4) equipped[s.part] = e;
         });
       }
       if (data.unlocked) Object.keys(data.unlocked).forEach(id => { unlocked[id] = data.unlocked[id]; });
@@ -1586,7 +1710,7 @@
   if (savedAt) {
     const offlineSec = Math.floor((Date.now() - savedAt) / 1000);
     if (offlineSec > 10) {
-      const gained = totalPerSec() * offlineSec;
+      const gained = Math.round(playerAttack() * playerAttackSpeed() * offlineSec * 0.5); // 离线收益（按攻击×攻速×时间折半）
       coins += gained;
       totalEarned += gained;
       const minutes = Math.max(1, Math.round(offlineSec / 60));
