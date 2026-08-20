@@ -35,8 +35,17 @@
     max-width: 1200px;      /* 桌面不让拉太开，保持整体协调 */
     margin: 0 auto;
     padding: 16px 24px 90px; /* 底部留 dock 空间 */
-    overflow: hidden;
+    overflow: visible;
   }
+  /* 主界面侧栏（桌面常驻；手机隐藏，走弹窗） */
+  .main-side { display: none; }
+  .side-title { font-size: 15px; font-weight: 800; color: #8a6d2a; letter-spacing: 1px; margin-bottom: 8px; }
+  .side-title span { font-size: 12px; font-weight: 700; color: #77705f; margin-left: 6px; }
+  .side-left, .side-right { background: rgba(255,255,255,0.7); border: 1px solid rgba(180,170,150,0.4); border-radius: 10px; padding: 12px; }
+  .side-attr { display: grid; grid-template-columns: 1fr; gap: 5px; }
+  .sa-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #55503f; }
+  .sa-row b { color: #a8750f; }
+  .side-equip, .side-inv { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
   /* 每个游戏的横向行：铺满宽度 */
   .game > * { width: 100%; }
   /* 资源行（金币 + 每秒伤害）已并入右上角；此容器不再使用 */
@@ -44,10 +53,55 @@
   .battle-row { display: flex; align-items: center; justify-content: center; gap: 30px; }
   .battle-row .monster-panel { flex: 1; max-width: 420px; }
   .battle-row .attack-btn { flex-shrink: 0; }
+
+  /* ===== 桌面端：侧栏贴边布局（角色栏在左上角等级栏正下方 / 背包栏右侧与角色栏对齐 / 中间战斗+对比）===== */
+  @media (min-width: 992px) {
+    .game { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 16px; max-width: min(880px, calc(100vw - 640px)); }
+    .main-side { display: block; }
+    /* 角色栏：移到左上角等级栏正下方（与等级栏左对齐） */
+    .side-left { position: fixed; top: 132px; left: 14px; width: 280px; max-height: calc(100vh - 150px); overflow-y: auto; z-index: 40; }
+    /* 背包栏：移到右侧，顶部与左侧角色栏对齐 */
+    .side-right { position: fixed; top: 132px; right: 14px; width: 280px; max-height: calc(100vh - 150px); overflow-y: auto; z-index: 40; }
+    .battle-row { width: 100%; }
+    .cmp-panel { width: 100%; margin-top: 6px; }
+    /* 侧栏装备左栏（角色栏）格 */
+    .side-equip .se-row { display: flex; align-items: center; gap: 11px; padding: 6px 8px; border-radius: 8px; border: 1px dashed rgba(180,170,150,0.5); background: rgba(252,249,242,0.7); font-size: 12px; font-weight: 700; color: #55503f; cursor: pointer; }
+    .side-equip .se-row:hover { background: rgba(232,192,96,0.2); border-color: #d0a437; }
+    .se-row .se-cost { flex: 1; font-weight: 800; color: #4a4438; }
+    /* 右侧栏内背包：窄栏紧凑的格子网格 + 详情 */
+    .side-right .side-inv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
+    .side-right .inv-item { padding: 5px 2px; }
+    .side-right .inv-detail { flex-direction: column; align-items: stretch; gap: 8px; margin-top: 8px; }
+    .side-right .inv-top { margin-top: 10px; }
+    /* 桌面端背包已并入右侧栏，隐藏 dock 背包浮窗入口（移动端仍用） */
+    .dock-btn[data-sys="inv"] { display: none; }
+  }
   .battle-opt { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 13px; }
   .battle-opt .bo-label { font-weight: 700; color: #55503f; }
   .bo-toggle { font-family: inherit; font-size: 12px; font-weight: 800; padding: 4px 14px; border-radius: 999px; cursor: pointer; border: 1px solid #d0a437; color: #a8750f; background: rgba(208,164,55,0.12); }
   .bo-toggle.off { border: 1px solid #b0aca4; color: #77705f; background: rgba(180,170,150,0.12); }
+
+  /* ===== 装备对比区（主界面战斗区下方）===== */
+  .cmp-panel { max-width: 720px; margin: 0 auto; }
+  .cmp-title { font-size: 15px; font-weight: 800; color: #8a6d2a; margin-bottom: 10px; letter-spacing: 1px; }
+  .cmp-title .cmp-hint { font-size: 11px; font-weight: 600; color: #b0aca4; margin-left: 6px; }
+  .cmp-wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 12px; }
+  .cmp-side { display: flex; flex-direction: column; gap: 6px; }
+  .cmp-side-title { font-size: 13px; font-weight: 800; color: #6b5a2a; }
+  .cmp-vs { display: flex; align-items: center; font-size: 20px; font-weight: 900; color: #cbb98a; }
+  .cmp-slot { flex: 1; border: 2px dashed rgba(180,170,150,0.6); border-radius: 10px; padding: 12px; min-height: 90px; display: flex; flex-direction: column; gap: 4px; background: rgba(252,249,242,0.7); }
+  .cmp-slot .cg-head { font-size: 14px; font-weight: 800; color: #4a4438; }
+  .cmp-slot .cg-stat { font-size: 12px; font-weight: 600; color: #55503f; }
+  .cmp-slot .cg-stat .up { color: #2f7d3a; }
+  .cmp-slot .cg-stat .down { color: #b3503a; }
+  .cmp-slot .cg-empty { color: #b0aca4; font-size: 13px; font-weight: 600; display:flex; align-items:center; justify-content:center; height:100%; }
+  .cmp-slot .cg-affix { font-size: 12px; font-weight: 600; color: #8a6d2a; }
+  .cmp-slot .cg-crit { font-size: 12px; font-weight: 600; color: #4a7db5; }
+
+  /* ===== 背包右键菜单 ===== */
+  .inv-menu { position: fixed; z-index: 200; min-width: 120px; background: rgba(255,255,255,0.97); border: 1px solid rgba(180,170,150,0.6); border-radius: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.2); padding: 4px; }
+  .inv-menu .im-item { padding: 8px 14px; font-size: 14px; font-weight: 700; color: #4a4438; border-radius: 6px; cursor: pointer; }
+  .inv-menu .im-item:hover { background: rgba(208,164,55,0.15); color: #a8750f; }
 
   /* ===== 屏幕角落固定元素（等级 左上 / 珂尔 右上）===== */
   .corner {
@@ -402,6 +456,19 @@
 
   <!-- ===== 主界面（无需滚动）===== -->
   <div class="game">
+    <!-- 左侧：角色面板（桌面常驻，定位到左上角等级栏正下方） -->
+    <aside class="main-side side-left" id="homeLeft">
+      <div class="side-title">👤 角色</div>
+      <div class="side-attr">
+        <div class="sa-row"><span>攻击</span><b id="saAtk">0</b></div>
+        <div class="sa-row"><span>防御</span><b id="saDef">0</b></div>
+        <div class="sa-row"><span>敏捷</span><b id="saAgi">0</b></div>
+        <div class="sa-row"><span>暴击</span><b id="saCrit">0%</b></div>
+        <div class="sa-row"><span>攻速</span><b id="saSpd">1.0</b></div>
+      </div>
+      <div class="side-equip" id="homeEquip"></div>
+    </aside>
+
     <!-- 战斗行（怪物面板 + 攻击按钮并排铺满）-->
     <div class="battle-row">
       <div class="panel monster-panel" id="monsterPanel">
@@ -421,6 +488,51 @@
       </div>
       <button id="coinBtn" class="attack-btn" aria-label="攻击怪物">⚔️ 攻击！</button>
     </div>
+
+    <!-- 装备对比区：左=已穿戴 右=悬停预览的未穿戴 -->
+    <div class="cmp-panel panel">
+      <div class="cmp-title">⚖️ 装备对比 <span class="cmp-hint">（悬停背包/商店装备实时对比）</span></div>
+      <div class="cmp-wrap">
+        <div class="cmp-side" id="cmpEquipped">
+          <div class="cmp-side-title">🛡️ 已穿戴</div>
+          <div class="cmp-slot" id="cmpEquipSlot"></div>
+        </div>
+        <div class="cmp-vs">VS</div>
+        <div class="cmp-side" id="cmpPreview">
+          <div class="cmp-side-title">👀 预览</div>
+          <div class="cmp-slot" id="cmpPrevSlot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧：背包栏（桌面常驻，顶部与左侧角色栏对齐；已合并背包系统的全部功能） -->
+    <aside class="main-side side-right" id="homeRight">
+      <div class="side-title">📦 背包 <span id="homeInvCount">0/60</span></div>
+      <div class="inv-top">
+        <div class="inv-count" id="homeInvTotal">0 / 60</div>
+        <div class="inv-sell-row">
+          <select id="homeSellType" class="sell-select" aria-label="出售范围">
+            <option value="0">普通</option>
+            <option value="1">精良及以下</option>
+            <option value="2">稀有及以下</option>
+            <option value="99">全部</option>
+          </select>
+          <button id="homeSellAllBtn" class="sell-btn" aria-label="一键出售">💰 出售</button>
+        </div>
+      </div>
+      <div class="auto-sell" id="homeAutoSellBox">
+        <div class="auto-sell-title">🤖 自动出售</div>
+        <div class="auto-sell-opts" id="homeAutoSellOpts">
+          <label class="qopt q-0"><input type="checkbox" data-q="0"> 普通</label>
+          <label class="qopt q-1"><input type="checkbox" data-q="1"> 精良</label>
+          <label class="qopt q-2"><input type="checkbox" data-q="2"> 稀有</label>
+          <label class="qopt q-3"><input type="checkbox" data-q="3"> 史诗</label>
+          <label class="qopt q-4"><input type="checkbox" data-q="4"> 传说</label>
+        </div>
+      </div>
+      <div class="side-inv" id="homeInv"></div>
+      <div class="inv-detail" id="homeInvDetail" style="display:none"></div>
+    </aside>
   </div>
 
   <!-- ===== 底部系统停靠栏 ===== -->
@@ -520,7 +632,7 @@
     <div class="sys-window" id="sys-set">
       <div class="sys-window-title">⚙️ 设置 <button class="sys-close" data-close="sys-set">✕</button></div>
       <div class="set-row">
-        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.2.0</div></div>
+        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.2.2</div></div>
         <button id="announceBtn" class="set-toggle">查看</button>
       </div>
       <div class="set-row">
@@ -534,7 +646,7 @@
     </div>
     <!-- 系统公告 -->
     <div class="sys-window" id="sys-announce">
-      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.2.0</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
+      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.2.2</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
       <div class="announce-list" id="announceList"></div>
     </div>
   </div>
@@ -545,8 +657,10 @@
   const SAVE_KEY = 'clicker_save';
 
   // ===== 系统公告 / 版本 =====
-  const GAME_VERSION = '0.2.0';
+  const GAME_VERSION = '0.2.2';
   const PATCH_NOTES = [
+    { version: '0.2.2', title: '主界面三栏布局', desc: '电脑端主界面重构：左侧常驻角色面板（属性概览+已穿戴装备）、中间战斗区、右侧常驻背包栏，与角色对称显示；手机端仍使用底部弹窗' },
+    { version: '0.2.1', title: '装备对比与穿戴优化', desc: '主界面新增装备对比区（左已穿戴/右悬停预览）；背包/商店装备鼠标悬停实时对比；背包装备右键弹出「穿戴/出售」菜单' },
     { version: '0.2.0', title: '装备系统重构', desc: '装备新增四维前缀（力量/敏捷/防御/血量）与后缀词条（暴击、吸血、破甲等）；敏捷提升闪避与攻速；暴击/吸血/破甲接入战斗；词条数量随层数与品质提升，满层最多 8 条（大版本，旧装备已重置）' },
     { version: '0.1.1', title: '商店系统上线', desc: '新增商店：可用珂尔购买装备；商店每次刷新 10 件装备；支持 1 万珂尔付费刷新，以及每 20 分钟恢复 1 次（上限 10 次）的免费刷新' },
     { version: '0.1.0', title: '界面优化与合并', desc: '弹窗动画改为流体式收放；角色与装备合并为统一「角色」界面；每场战斗前回满状态改为常驻（移除开关）；「击败后自动进入下一层」开关移至主界面' },
@@ -738,6 +852,93 @@
   const shopFreeCountEl = $('shopFreeCount');
   const shopRefreshBtn = $('shopRefreshBtn');
   const shopPayBtn = $('shopPayBtn');
+  // 装备对比区 DOM
+  let cmpPrevItem = null;            // 当前悬停的未穿戴装备
+  const cmpEquipSlotEl = $('cmpEquipSlot');
+  const cmpPrevSlotEl = $('cmpPrevSlot');
+  // 主界面侧栏（桌面）
+  const homeEquipEl = $('homeEquip');
+  const homeInvEl = $('homeInv');
+  const homeInvCountEl = $('homeInvCount');
+  // 右侧栏背包（合并自底部背包浮窗）：独立 id 以便与浮窗并存
+  const homeInvTotalEl = $('homeInvTotal');
+  const homeInvDetailEl = $('homeInvDetail');
+  const homeSellAllBtn = $('homeSellAllBtn');
+  const homeSellTypeEl = $('homeSellType');
+
+  // 渲染主界面左侧角色栏（属性概览 + 已穿戴装备列表）
+  function renderHomeSide() {
+    const upd = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    upd('saAtk', Math.round(playerAttack()));
+    upd('saDef', Math.round(playerDefense()));
+    upd('saAgi', Math.round(playerAgility()));
+    upd('saCrit', Math.round(playerCrit()) + '%');
+    upd('saSpd', playerAttackSpeed().toFixed(1));
+    // 左侧已穿戴列表
+    if (homeEquipEl) {
+      homeEquipEl.innerHTML = '';
+      SLOTS.forEach(s => {
+        const it = equipped[s.part];
+        const row = document.createElement('div');
+        row.className = 'se-row';
+        const icon = SLOTS.find(x => x.part === s.part).svg;
+        row.innerHTML = (it
+          ? '<span>' + icon + '</span><span class="se-cost">' + qualityName(it.q) + '·' + s.part + '</span><span>' + (it.str||0) + '力</span>'
+          : '<span>' + icon + '</span><span class="se-cost">' + s.part + '</span><span style="color:#b0aca4">空</span>');
+        homeEquipEl.appendChild(row);
+      });
+    }
+    // 右侧背包网格由 renderInv() 一并渲染（见 paintInv）
+  }
+
+  // 渲染一件装备到对比槽（base=已穿戴, peek=悬停）
+  function fillCmpSlot(el, item, isPeek) {
+    if (!el) return;
+    if (!item) { el.innerHTML = '<span class="cg-empty">' + (isPeek ? '悬停装备预览' : '空') + '</span>'; return; }
+    const stats = itemStats(item);
+    let html = '<div class="cg-head">' + qualityName(item.q) + ' · ' + item.part + ' Lv' + item.level + '</div>';
+    html += '<div class="cg-stat">' + (isPeek ? '➡ 力' : '力') + item.str + '</div>';
+    html += '<div class="cg-stat">🛡 防' + item.def + ' ｜ 💨 敏' + item.agi + ' ｜ ❤ 血' + item.hp + '</div>';
+    if (item.suffix && item.suffix.length) html += '<div class="cg-affix">词条：' + item.suffix.map(([k,v])=>{const a=AFFIX[k];return a?a.name+'+'+v:''}).join('、') + '</div>';
+    el.innerHTML = html;
+  }
+  // 渲染对比区：左已穿戴，右悬停预览
+  function renderCompare() {
+    const equippedFor = cmpPrevItem ? cmpPrevItem.part : null;
+    const worn = equippedFor ? equipped[equippedFor] : null;
+    fillCmpSlot(cmpEquipSlotEl, worn, false);
+    fillCmpSlot(cmpPrevSlotEl, cmpPrevItem, true);
+  }
+  // 右键菜单（背包格）
+  const invMenuEl = document.createElement('div');
+  invMenuEl.className = 'inv-menu';
+  invMenuEl.style.display = 'none';
+  let invMenuSource = null;   // 当前菜单对应的触发源元素
+  document.body.appendChild(invMenuEl);
+  function showInvMenu(x, y, it, src) {
+    invMenuSource = src || null;
+    invMenuEl.innerHTML = '';
+    const wear = document.createElement('div');
+    wear.className = 'im-item';
+    wear.textContent = '⚔️ 穿戴';
+    wear.addEventListener('click', () => { hideInvMenu(); wearItem(it.uid); });
+    invMenuEl.appendChild(wear);
+    const sell = document.createElement('div');
+    sell.className = 'im-item';
+    sell.textContent = '💸 出售';
+    sell.addEventListener('click', () => { hideInvMenu(); sellItem(it.uid); });
+    invMenuEl.appendChild(sell);
+    invMenuEl.style.left = Math.min(x, window.innerWidth - 130) + 'px';
+    invMenuEl.style.top = Math.min(y, window.innerHeight - 80) + 'px';
+    invMenuEl.style.display = 'block';
+  }
+  function hideInvMenu() { invMenuEl.style.display = 'none'; }
+  document.addEventListener('click', (e) => { if (!invMenuEl.contains(e.target)) hideInvMenu(); });
+  document.addEventListener('contextmenu', (e) => {
+    // 在触发菜单的同一格子上再右键：保持不隐藏（由格子回调刷新菜单）
+    if (invMenuEl.style.display !== 'none' && invMenuSource && invMenuSource.contains(e.target)) return;
+    if (!invMenuEl.contains(e.target)) hideInvMenu();
+  });
 
   // ===== 数值计算 =====
   function qualityColor(q) { return ['#9ca3af','#4ade80','#60a5fa','#c084fc','#fbbf24'][q]; }
@@ -1153,8 +1354,8 @@
     renderAll();
   }
 
-  function sellAll() {
-    const sellTypeEl = document.getElementById('sellType');
+  function sellAll(sellTypeEl) {
+    sellTypeEl = sellTypeEl || document.getElementById('sellType');
     const q = sellTypeEl ? parseInt(sellTypeEl.value, 10) : 0;
     const label = sellTypeEl ? sellTypeEl.options[sellTypeEl.selectedIndex].text : '普通';
     let gained = 0;
@@ -1173,14 +1374,16 @@
     renderAll();
   }
 
-  function renderInv() {
-    invCountEl.textContent = inventory.length + ' / ' + INV_MAX;
-    invGridEl.innerHTML = '';
+  // 通用背包渲染：网格 + 选中详情（浮窗与右侧栏共用）
+  function paintInv(gridEl, detailEl, countEl) {
+    if (countEl) countEl.textContent = inventory.length + ' / ' + INV_MAX;
+    if (!gridEl) return;
+    gridEl.innerHTML = '';
     if (inventory.length === 0) {
       const d = document.createElement('div');
       d.className = 'inv-empty';
       d.textContent = '背包空空如也，去打怪吧！';
-      invGridEl.appendChild(d);
+      gridEl.appendChild(d);
     } else {
       const sorted = inventory.slice().sort((a,b) => (b.q - a.q) || ((b.str || 0) - (a.str || 0)));
       sorted.forEach(it => {
@@ -1190,30 +1393,42 @@
           '<span class="i-dmg">Lv' + (it.level || 1) + '</span>';
         el.title = qualityName(it.q) + ' ' + it.part + ' · ' + itemStats(it) + ' · 售价 ' + format(sellPrice(it));
         el.addEventListener('click', () => selectInvItem(it));
-        invGridEl.appendChild(el);
+        el.addEventListener('mouseenter', () => { cmpPrevItem = it; renderCompare(); });
+        el.addEventListener('mouseleave', () => { cmpPrevItem = null; renderCompare(); });
+        el.addEventListener('contextmenu', (ev) => { ev.preventDefault(); showInvMenu(ev.clientX, ev.clientY, it, ev.currentTarget); });
+        gridEl.appendChild(el);
       });
     }
-    if (selectedInv) {
-      const it = inventory.find(x => x.uid === selectedInv);
-      if (it) {
-        invDetailEl.style.display = 'flex';
-        const owned = equipped[it.part];
-        invDetailEl.innerHTML =
-          '<div class="d-info">' +
-            '<span class="d-name" style="color:' + qualityColor(it.q) + '">' + qualityName(it.q) + ' ' + it.part + (it.level ? ' Lv' + it.level : '') + '</span>' +
-            '<span class="d-sub">' + itemStats(it) + '</span>' +
-            '<span class="d-sub">词条 ' + (it.suffix ? it.suffix.length : 0) + '条 ｜ 来自第' + it.floor + '层 ｜ 售价 ' + format(sellPrice(it)) + '</span>' +
-          '</div>' +
-          '<div class="d-actions">' +
-            '<button class="act-btn wear" data-a="wear">⚔️ 穿戴</button>' +
-            '<button class="act-btn sell" data-a="sell">💸 出售</button>' +
-          '</div>';
-        invDetailEl.querySelector('[data-a="wear"]').addEventListener('click', () => wearItem(it.uid));
-        invDetailEl.querySelector('[data-a="sell"]').addEventListener('click', () => sellItem(it.uid));
-      } else { selectedInv = null; invDetailEl.style.display = 'none'; }
-    } else {
-      invDetailEl.style.display = 'none';
+    // 选中装备详情
+    if (detailEl) {
+      if (selectedInv) {
+        const it = inventory.find(x => x.uid === selectedInv);
+        if (it) {
+          detailEl.style.display = 'flex';
+          detailEl.innerHTML =
+            '<div class="d-info">' +
+              '<span class="d-name" style="color:' + qualityColor(it.q) + '">' + qualityName(it.q) + ' ' + it.part + (it.level ? ' Lv' + it.level : '') + '</span>' +
+              '<span class="d-sub">' + itemStats(it) + '</span>' +
+              '<span class="d-sub">词条 ' + (it.suffix ? it.suffix.length : 0) + '条 ｜ 来自第' + it.floor + '层 ｜ 售价 ' + format(sellPrice(it)) + '</span>' +
+            '</div>' +
+            '<div class="d-actions">' +
+              '<button class="act-btn wear" data-a="wear">⚔️ 穿戴</button>' +
+              '<button class="act-btn sell" data-a="sell">💸 出售</button>' +
+            '</div>';
+          detailEl.querySelector('[data-a="wear"]').addEventListener('click', () => wearItem(it.uid));
+          detailEl.querySelector('[data-a="sell"]').addEventListener('click', () => sellItem(it.uid));
+        } else { selectedInv = null; detailEl.style.display = 'none'; }
+      } else {
+        detailEl.style.display = 'none';
+      }
     }
+  }
+
+  function renderInv() {
+    paintInv(invGridEl, invDetailEl, invCountEl);          // 背包浮窗
+    paintInv(homeInvEl, homeInvDetailEl, homeInvTotalEl);  // 主界面右侧背包栏
+    if (homeInvCountEl) homeInvCountEl.textContent = inventory.length + '/60';
+    renderHomeSide();   // 刷新左侧角色栏 + 已穿戴
   }
 
   function selectInvItem(it) {
@@ -1379,6 +1594,8 @@
     setCoins(coins);
     incomeTotalEl.textContent = '⚔' + format(playerAttack());
     titleBarEl.textContent = titleFor(playerLevel);
+    renderCompare();   // 刷新装备对比区
+    renderHomeSide();  // 刷新主界面侧栏（桌面）
     checkAchievements();
     renderPlayer();
     renderEquip();
@@ -1523,22 +1740,26 @@
 
   // ===== 背包按钮 =====
   sellAllBtn.addEventListener('click', sellAll);
+  if (homeSellAllBtn) homeSellAllBtn.addEventListener('click', () => sellAll(homeSellTypeEl));
 
-  // ===== 自动出售设置 =====
+  // ===== 自动出售设置（浮窗 + 右侧栏共用一份状态）=====
   function renderAutoSell() {
-    const opts = document.getElementById('autoSellOpts');
-    if (!opts) return;
-    opts.querySelectorAll('input[data-q]').forEach(cb => {
-      const q = parseInt(cb.dataset.q, 10);
-      cb.checked = !!autoSell[q];
+    document.querySelectorAll('.auto-sell-opts').forEach(opts => {
+      opts.querySelectorAll('input[data-q]').forEach(cb => {
+        const q = parseInt(cb.dataset.q, 10);
+        cb.checked = !!autoSell[q];
+      });
     });
   }
-  document.getElementById('autoSellOpts').addEventListener('change', function (e) {
-    if (e.target && e.target.dataset.q !== undefined) {
-      const q = parseInt(e.target.dataset.q, 10);
-      autoSell[q] = e.target.checked;
-      saveGame();
-    }
+  document.querySelectorAll('.auto-sell-opts').forEach(opts => {
+    opts.addEventListener('change', function (e) {
+      if (e.target && e.target.dataset.q !== undefined) {
+        const q = parseInt(e.target.dataset.q, 10);
+        autoSell[q] = e.target.checked;
+        renderAutoSell();   // 同步另一处勾选状态
+        saveGame();
+      }
+    });
   });
   renderAutoSell();
 
@@ -1563,6 +1784,8 @@
           '<button class="s-buy">购买</button>';
         const btn = cell.querySelector('.s-buy');
         btn.addEventListener('click', () => buyShopItem(i));
+        cell.addEventListener('mouseenter', () => { cmpPrevItem = it; renderCompare(); });
+        cell.addEventListener('mouseleave', () => { cmpPrevItem = null; renderCompare(); });
         if (coins < shopPrice(it)) btn.style.opacity = '0.5';
       } else {
         cell.innerHTML = '<span class="s-sold-tag">已售出</span>';
