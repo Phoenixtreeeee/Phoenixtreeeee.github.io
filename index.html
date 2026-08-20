@@ -284,6 +284,31 @@
   .act-btn.sell { border:1px solid #fbbf24; color:#a8790f; background: rgba(251,191,36,0.12); }
   .act-btn.sell:hover { background: rgba(251,191,36,0.3); }
 
+  /* ===== 商店 ===== */
+  .shop-top { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .shop-info { display:flex; flex-direction:column; gap:2px; }
+  .shop-balance { font-size:15px; font-weight:800; color:#a8750f; }
+  .shop-free { font-size:13px; font-weight:700; color:#6b5a2a; }
+  .shop-free b { color:#a8750f; }
+  .shop-btns { display:flex; gap:8px; flex-wrap:wrap; }
+  .shop-refresh-btn { font-family:inherit; font-size:13px; font-weight:800; padding:7px 14px; border-radius:999px; border:1px solid #d0a437; color:#a8750f; background: rgba(208,164,55,0.12); cursor:pointer; transition:all 0.12s ease; outline:none; }
+  .shop-refresh-btn:hover { background: rgba(208,164,55,0.3); }
+  .shop-refresh-btn.pay { border-color:#fbbf24; color:#a8790f; background: rgba(251,191,36,0.12); }
+  .shop-refresh-btn.pay:hover { background: rgba(251,191,36,0.3); }
+  .shop-hint { font-size:11px; font-weight:600; color:#77705f; margin-bottom:8px; }
+  .shop-grid { display:grid; grid-template-columns: repeat(5, 1fr); gap:6px; }
+  .shop-item { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 4px; border-radius:9px; border:1px solid #b0aca4; background: rgba(252,249,242,0.8); text-align:center; position:relative; }
+  .shop-item .s-icon { font-size:22px; line-height:1; }
+  .shop-item .s-name { font-size:11px; font-weight:800; color:#4a4438; line-height:1.2; min-height:26px; display:flex; align-items:center; }
+  .shop-item .s-dmg { font-size:11px; font-weight:700; color:#2f7d3a; }
+  .shop-item .s-price { font-size:12px; font-weight:800; color:#a8750f; margin-top:2px; }
+  .shop-item .s-buy { font-family:inherit; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px; border:1px solid #d0a437; color:#a8750f; background: rgba(208,164,55,0.12); cursor:pointer; transition:all 0.12s ease; outline:none; }
+  .shop-item .s-buy:hover { background: rgba(208,164,55,0.3); }
+  .shop-item.sold { opacity:0.5; filter:grayscale(0.8); }
+  .shop-item.sold .s-buy { display:none; }
+  .shop-item .s-sold-tag { display:none; font-size:11px; font-weight:800; color:#8a8a80; }
+  .shop-item.sold .s-sold-tag { display:block; }
+
   .ach-title { font-size:15px; font-weight:800; color:#8a6d2a; letter-spacing:1px; }
   .ach-grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
   .achievement-card { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 5px; border-radius:9px; border:1px solid #b0aca4; background: rgba(252,249,242,0.8); filter:grayscale(0.6); opacity:0.7; text-align:center; }
@@ -402,6 +427,7 @@
   <div class="dock" id="dock">
     <button class="dock-btn" data-sys="floor" title="楼层">🗺️<span class="dock-label">楼层</span></button>
     <button class="dock-btn" data-sys="inv" title="背包">📦<span class="dock-label">背包</span></button>
+  <button class="dock-btn" data-sys="shop" title="商店">🛒<span class="dock-label">商店</span></button>
     <button class="dock-btn" data-sys="attr" title="角色">👤<span class="dock-label">角色</span></button>
     <button class="dock-btn" data-sys="ach" title="成就">🏆<span class="dock-label">成就</span></button>
     <button class="dock-btn" data-sys="set" title="设置">⚙️<span class="dock-label">设置</span></button>
@@ -467,6 +493,22 @@
       <div class="inv-grid" id="invGrid"></div>
       <div class="inv-detail" id="invDetail" style="display:none"></div>
     </div>
+    <!-- 商店 -->
+    <div class="sys-window" id="sys-shop">
+      <div class="sys-window-title">🛒 商店 <button class="sys-close" data-close="sys-shop">✕</button></div>
+      <div class="shop-top">
+        <div class="shop-info">
+          <div class="shop-balance">💰 <span id="shopCoins">0</span> 珂尔</div>
+          <div class="shop-free">🎟️ 免费刷新 <b id="shopFreeCount">10</b> / 10</div>
+        </div>
+        <div class="shop-btns">
+          <button id="shopRefreshBtn" class="shop-refresh-btn" aria-label="免费刷新">🎟️ 免费刷新</button>
+          <button id="shopPayBtn" class="shop-refresh-btn pay" aria-label="花费1万珂尔刷新">💰 1万珂尔刷新</button>
+        </div>
+      </div>
+      <div class="shop-hint">免费刷新每 20 分钟恢复 1 次（上限 10 次）· 商店装备随最高层提升</div>
+      <div class="shop-grid" id="shopGrid"></div>
+    </div>
     <!-- 成就 -->
     <div class="sys-window" id="sys-ach">
       <div class="sys-window-title">🏆 成就 <button class="sys-close" data-close="sys-ach">✕</button></div>
@@ -476,7 +518,7 @@
     <div class="sys-window" id="sys-set">
       <div class="sys-window-title">⚙️ 设置 <button class="sys-close" data-close="sys-set">✕</button></div>
       <div class="set-row">
-        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.1.0</div></div>
+        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.1.1</div></div>
         <button id="announceBtn" class="set-toggle">查看</button>
       </div>
       <div class="set-row">
@@ -490,7 +532,7 @@
     </div>
     <!-- 系统公告 -->
     <div class="sys-window" id="sys-announce">
-      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.1.0</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
+      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.1.1</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
       <div class="announce-list" id="announceList"></div>
     </div>
   </div>
@@ -501,8 +543,9 @@
   const SAVE_KEY = 'clicker_save';
 
   // ===== 系统公告 / 版本 =====
-  const GAME_VERSION = '0.1.0';
+  const GAME_VERSION = '0.1.1';
   const PATCH_NOTES = [
+    { version: '0.1.1', title: '商店系统上线', desc: '新增商店：可用珂尔购买装备；商店每次刷新 10 件装备；支持 1 万珂尔付费刷新，以及每 20 分钟恢复 1 次（上限 10 次）的免费刷新' },
     { version: '0.1.0', title: '界面优化与合并', desc: '弹窗动画改为流体式收放；角色与装备合并为统一「角色」界面；每场战斗前回满状态改为常驻（移除开关）；「击败后自动进入下一层」开关移至主界面' },
     { version: '0.0.9', title: '战斗系统优化', desc: '属性系统移入底部「角色」面板并支持加点重置；新增战斗偏好：每场战斗前回满状态、击败 Boss 后自动进入下一层' },
     { version: '0.0.8', title: '回合制战斗系统', desc: '战斗改为回合制：我方攻击后怪物强制回击；新增角色四维属性（生命/攻击/防御）成长系统与手动加点；防御减伤；角色死亡会损失珂尔并回退层级' },
@@ -686,6 +729,12 @@
   const invGridEl = $('invGrid');
   const invDetailEl = $('invDetail');
   const sellAllBtn = $('sellAllBtn');
+  // 商店 DOM
+  const shopGridEl = $('shopGrid');
+  const shopCoinsEl = $('shopCoins');
+  const shopFreeCountEl = $('shopFreeCount');
+  const shopRefreshBtn = $('shopRefreshBtn');
+  const shopPayBtn = $('shopPayBtn');
 
   // ===== 数值计算 =====
   function qualityColor(q) { return ['#9ca3af','#4ade80','#60a5fa','#c084fc','#fbbf24'][q]; }
@@ -704,6 +753,76 @@
     const base = 1 + (floor - 1) * 2;
     const dmg = Math.max(1, Math.round(base * QUALITY[q].mult * (0.85 + Math.random() * 0.30)));
     return { uid: uidCounter++, part: slot.part, q: q, dmg: dmg, floor: floor };
+  }
+
+  // ===== 商店 =====
+  const SHOP_SIZE = 10;                 // 每次刷新 10 个装备
+  const SHOP_REFRESH_COST = 10000;      // 付费刷新：1w 珂尔
+  const FREE_MAX = 10;                  // 免费刷新次数上限
+  const FREE_INTERVAL = 20 * 60 * 1000; // 每 20 分钟恢复 1 次免费刷新
+
+  let shopStock = [];       // 商店当前 10 个装备（null = 已售出）
+  let freeRefreshes = 10;   // 当前免费刷新次数
+  let lastFreeAt = Date.now(); // 上次免费刷新恢复时间戳
+
+  // 商店装备定价：随伤害与品质提高
+  function shopPrice(item) { return Math.max(10, Math.round(item.dmg * (2 + item.q * 3))); }
+
+  // 生成一个商店装备（等级 = 玩家当前最高层，品质分布同掉落）
+  function makeShopItem() {
+    const floor = Math.max(1, maxFloor);
+    const it = makeDrop(floor);
+    return it;
+  }
+
+  // 按时间恢复免费刷新次数（离线也累计）
+  function recoverFree() {
+    const now = Date.now();
+    if (now > lastFreeAt && freeRefreshes < FREE_MAX) {
+      const gained = Math.floor((now - lastFreeAt) / FREE_INTERVAL);
+      if (gained > 0) {
+        freeRefreshes = Math.min(FREE_MAX, freeRefreshes + gained);
+        lastFreeAt += gained * FREE_INTERVAL;
+      }
+    }
+    if (freeRefreshes >= FREE_MAX) lastFreeAt = now;
+  }
+
+  // 刷新商店：免费优先，其次花费 1w 珂尔
+  function refreshShop() {
+    recoverFree();
+    if (freeRefreshes > 0) {
+      freeRefreshes -= 1;
+    } else if (coins >= SHOP_REFRESH_COST) {
+      coins -= SHOP_REFRESH_COST;
+      totalEarned -= 0; // 消费不计入累计
+    } else {
+      showToast('💰 珂尔不足，无法刷新商店（需 ' + format(SHOP_REFRESH_COST) + ' 珂尔）');
+      return;
+    }
+    shopStock = [];
+    for (let i = 0; i < SHOP_SIZE; i++) shopStock.push(makeShopItem());
+    playBuy();
+    renderShop();
+    updateAll();
+    showDrop('🛒 商店已刷新');
+  }
+
+  // 购买商店装备：扣珂尔 → 进背包 → 槽位置空
+  function buyShopItem(i) {
+    const item = shopStock[i];
+    if (!item) return;
+    const price = shopPrice(item);
+    if (coins < price) { showToast('💰 珂尔不足：需要 ' + format(price) + ' 珂尔'); return; }
+    if (inventory.length >= INV_MAX) { showToast('⚠️ 背包已满，无法购买'); return; }
+    coins -= price;
+    inventory.push(item);
+    shopStock[i] = null;
+    playBuy();
+    renderInv();
+    renderShop();
+    updateAll();
+    showDrop('🛒 购买成功：' + QUALITY[item.q].name + ' · ' + item.part);
   }
 
   // ===== 角色属性成长（回合制）=====
@@ -1307,6 +1426,52 @@
   });
   renderAutoSell();
 
+  // ===== 商店 =====
+  function renderShop() {
+    recoverFree();
+    if (shopCoinsEl) shopCoinsEl.textContent = format(coins);
+    if (shopFreeCountEl) shopFreeCountEl.textContent = freeRefreshes;
+    if (!shopGridEl) return;
+    shopGridEl.innerHTML = '';
+    for (let i = 0; i < SHOP_SIZE; i++) {
+      const it = shopStock[i];
+      const cell = document.createElement('div');
+      cell.className = 'shop-item' + (it ? '' : ' sold');
+      if (it) {
+        const slot = SLOTS.find(s => s.part === it.part);
+        cell.innerHTML =
+          '<span class="s-icon">' + slot.svg + '</span>' +
+          '<span class="s-name">' + QUALITY[it.q].name + '·' + it.part + '</span>' +
+          '<span class="s-dmg">⚔' + it.dmg + '</span>' +
+          '<span class="s-price">' + format(shopPrice(it)) + ' 珂尔</span>' +
+          '<button class="s-buy">购买</button>';
+        const btn = cell.querySelector('.s-buy');
+        btn.addEventListener('click', () => buyShopItem(i));
+        if (coins < shopPrice(it)) btn.style.opacity = '0.5';
+      } else {
+        cell.innerHTML = '<span class="s-sold-tag">已售出</span>';
+      }
+      shopGridEl.appendChild(cell);
+    }
+  }
+  // 商店按钮：免费刷新 / 1万珂尔强制刷新
+  if (shopRefreshBtn) shopRefreshBtn.addEventListener('click', () => { refreshShop(); });
+  if (shopPayBtn) shopPayBtn.addEventListener('click', () => { payRefreshShop(); });
+  function payRefreshShop() {
+    recoverFree();
+    if (coins < SHOP_REFRESH_COST) { showToast('💰 珂尔不足：需要 ' + format(SHOP_REFRESH_COST) + ' 珂尔'); return; }
+    coins -= SHOP_REFRESH_COST;
+    shopStock = [];
+    for (let i = 0; i < SHOP_SIZE; i++) shopStock.push(makeShopItem());
+    playBuy();
+    renderShop();
+    updateAll();
+    showDrop('🛒 商店已刷新');
+  }
+  // 打开商店时若第一次则初始化一批货物
+  function ensureShopStock() { if (shopStock.length === 0) { shopStock = []; for (let i = 0; i < SHOP_SIZE; i++) shopStock.push(makeShopItem()); } }
+  renderShop();
+
   // ===== 设置窗口：音效 + 重置 =====
   const soundBtn = document.getElementById('soundBtn');
   function updateSoundBtn() {
@@ -1356,6 +1521,7 @@
         inventory: inventory,
         uidCounter: uidCounter,
         autoSell: autoSell,
+        storage: { shopStock, freeRefreshes, lastFreeAt },
         soundOn: soundOn,
         fightBoss: fightBoss,
         savedAt: Date.now()
@@ -1396,6 +1562,12 @@
           if (typeof data.autoSell[q] === 'boolean') autoSell[q] = data.autoSell[q];
         }
       }
+      // 商店恢复（旧档无则初始化新货）
+      if (data.storage && Array.isArray(data.storage.shopStock)) {
+        shopStock = data.storage.shopStock.filter(i => i && typeof i.uid === 'number');
+        if (typeof data.storage.freeRefreshes === 'number') freeRefreshes = Math.min(FREE_MAX, data.storage.freeRefreshes);
+        if (typeof data.storage.lastFreeAt === 'number') lastFreeAt = data.storage.lastFreeAt;
+      }
       if (data.equipped && typeof data.equipped === 'object') {
         SLOTS.forEach(s => {
           const e = data.equipped[s.part];
@@ -1432,6 +1604,8 @@
   renderAutoSell();
   initPrefs();
   updateSoundBtn();
+  ensureShopStock();
+  renderShop();
 </script>
 </body>
 </html>
