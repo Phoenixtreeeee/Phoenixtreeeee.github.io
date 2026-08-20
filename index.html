@@ -42,10 +42,7 @@
   .side-title { font-size: 15px; font-weight: 800; color: #8a6d2a; letter-spacing: 1px; margin-bottom: 8px; }
   .side-title span { font-size: 12px; font-weight: 700; color: #77705f; margin-left: 6px; }
   .side-left, .side-right { background: rgba(255,255,255,0.7); border: 1px solid rgba(180,170,150,0.4); border-radius: 10px; padding: 12px; }
-  .side-attr { display: grid; grid-template-columns: 1fr; gap: 5px; }
-  .sa-row { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; color: #55503f; }
-  .sa-row b { color: #a8750f; }
-  .side-equip, .side-inv { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+  .side-inv { margin-top: 10px; }
   /* 每个游戏的横向行：铺满宽度 */
   .game > * { width: 100%; }
   /* 资源行（金币 + 每秒伤害）已并入右上角；此容器不再使用 */
@@ -56,33 +53,39 @@
 
   /* ===== 桌面端：侧栏贴边布局（角色栏在左上角等级栏正下方 / 背包栏右侧与角色栏对齐 / 中间战斗+对比）===== */
   @media (min-width: 992px) {
-    .game { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 16px; max-width: min(880px, calc(100vw - 640px)); }
+    .game { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 16px; max-width: clamp(520px, calc(100vw - 1260px), 1100px); margin: 0 auto; }
     .main-side { display: block; }
-    /* 角色栏：移到左上角等级栏正下方（与等级栏左对齐） */
-    .side-left { position: fixed; top: 132px; left: 14px; width: 280px; max-height: calc(100vh - 150px); overflow-y: auto; z-index: 40; }
-    /* 背包栏：移到右侧，顶部与左侧角色栏对齐 */
-    .side-right { position: fixed; top: 132px; right: 14px; width: 280px; max-height: calc(100vh - 150px); overflow-y: auto; z-index: 40; }
+    /* 角色栏：移到左上角等级栏正下方，大幅向中间扩展 */
+    .side-left { position: fixed; top: 132px; left: 14px; width: clamp(300px, calc(50vw - 280px), 600px); max-height: calc(100vh - 150px); overflow-y: auto; z-index: 40; }
+    /* 背包栏：移到右侧，顶部与左侧角色栏对齐、同宽 */
+    .side-right { position: fixed; top: 132px; right: 14px; width: clamp(300px, calc(50vw - 280px), 600px); max-height: calc(100vh - 150px); overflow-y: auto; z-index: 40; }
+    /* 左上/右上角标：与两侧栏同宽，视觉对称 */
+    .corner-tl, .corner-tr { width: clamp(340px, calc(50vw - 280px), 600px); }
     .battle-row { width: 100%; }
-    .cmp-panel { width: 100%; margin-top: 6px; }
-    /* 侧栏装备左栏（角色栏）格 */
-    .side-equip .se-row { display: flex; align-items: center; gap: 11px; padding: 6px 8px; border-radius: 8px; border: 1px dashed rgba(180,170,150,0.5); background: rgba(252,249,242,0.7); font-size: 12px; font-weight: 700; color: #55503f; cursor: pointer; }
-    .side-equip .se-row:hover { background: rgba(232,192,96,0.2); border-color: #d0a437; }
-    .se-row .se-cost { flex: 1; font-weight: 800; color: #4a4438; }
-    /* 右侧栏内背包：窄栏紧凑的格子网格 + 详情 */
-    .side-right .side-inv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-top: 10px; }
-    .side-right .inv-item { padding: 5px 2px; }
-    .side-right .inv-detail { flex-direction: column; align-items: stretch; gap: 8px; margin-top: 8px; }
+    .cmp-panel.panel { max-width: 680px; margin-top: 6px; }
+    /* 左侧栏内角色面板 */
+    .side-left .ap-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .side-left .ap-stat { padding: 8px 12px; font-size: 13px; white-space: nowrap; min-height: 34px; }
+    .side-left .ap-stat b { font-size: 14px; white-space: nowrap; }
+    .side-left .equip-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .side-left .equip-slot { gap: 10px; padding: 9px 11px; }
+    .side-left .eq-frame { width: 42px; height: 42px; }
+    /* 右侧栏内背包 */
+    .side-right .side-inv { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-top: 10px; }
+    .side-right .inv-item { padding: 7px 2px; }
+    .side-right .inv-detail { flex-direction: row; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
     .side-right .inv-top { margin-top: 10px; }
-    /* 桌面端背包已并入右侧栏，隐藏 dock 背包浮窗入口（移动端仍用） */
+    /* 桌面端背包/角色已并入侧栏，隐藏 dock 对应浮窗入口（移动端仍用） */
     .dock-btn[data-sys="inv"] { display: none; }
+    .dock-btn[data-sys="attr"] { display: none; }
   }
   .battle-opt { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 13px; }
   .battle-opt .bo-label { font-weight: 700; color: #55503f; }
   .bo-toggle { font-family: inherit; font-size: 12px; font-weight: 800; padding: 4px 14px; border-radius: 999px; cursor: pointer; border: 1px solid #d0a437; color: #a8750f; background: rgba(208,164,55,0.12); }
   .bo-toggle.off { border: 1px solid #b0aca4; color: #77705f; background: rgba(180,170,150,0.12); }
 
-  /* ===== 装备对比区（主界面战斗区下方）===== */
-  .cmp-panel { max-width: 720px; margin: 0 auto; }
+  /* ===== 装备对比区（主界面战斗区下方，与上方战斗栏同宽）===== */
+  .cmp-panel { margin: 0 auto; }
   .cmp-title { font-size: 15px; font-weight: 800; color: #8a6d2a; margin-bottom: 10px; letter-spacing: 1px; }
   .cmp-title .cmp-hint { font-size: 11px; font-weight: 600; color: #b0aca4; margin-left: 6px; }
   .cmp-wrap { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 12px; }
@@ -106,7 +109,7 @@
   /* ===== 屏幕角落固定元素（等级 左上 / 珂尔 右上）===== */
   .corner {
     position: fixed; z-index: 45;
-    min-width: 300px;              /* 两个角标宽度加倍且一致 */
+    min-width: 340px;            /* 两个角标与两侧栏同宽，视觉对称 */
     background: rgba(252,249,242,0.88);
     border: 1px solid rgba(180,170,150,0.5);
     border-radius: 10px;
@@ -138,6 +141,9 @@
   .ap-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .ap-stat { background: rgba(252,249,242,0.8); border: 1px solid rgba(180,170,150,0.4); border-radius: 8px; padding: 10px 12px; font-size: 14px; font-weight: 700; color: #55503f; display: flex; justify-content: space-between; align-items: center; }
   .ap-stat b { color: #a8750f; font-size: 16px; }
+  .ap-stat b .attr-diff { font-size: 12px; margin-left: 4px; font-weight: 900; }
+  .ap-stat b .attr-diff.up { color: #2f7d3a; }
+  .ap-stat b .attr-diff.down { color: #b3503a; }
   .ap-add { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .ap-add-title { font-size: 13px; font-weight: 800; color: #8a6d2a; }
   .ap-prefs { border-top: 1px solid rgba(180,170,150,0.3); padding-top: 10px; display: flex; flex-direction: column; gap: 8px; }
@@ -182,17 +188,17 @@
   .hp-bar { position: relative; width: 100%; height: 18px; background: rgba(255,255,255,0.85); border: 1px solid rgba(179,80,58,0.4); border-radius: 999px; overflow: hidden; }
   .hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #c96a4e, #e89a80); box-shadow: 0 0 10px rgba(201,106,78,0.4); transition: width 0.2s ease; }
 
-  /* ===== 攻击按钮 ===== */
+  /* ===== 攻击按钮（方形）===== */
   .attack-btn {
-    position: relative; width: 200px; height: 200px; border: none; border-radius: 50%;
-    cursor: pointer; font-family: inherit; font-size: 34px; font-weight: 900; color: #3a2606;
-    background: radial-gradient(circle at 32% 26%, #fce9c0 0%, #e8b43c 22%, #d99a1b 55%, #a8741a 100%);
+    position: relative; width: 200px; height: 200px; border: none; border-radius: 18px;
+    cursor: pointer; font-family: inherit; font-size: 36px; font-weight: 900; color: #3a2606;
+    background: radial-gradient(circle at 30% 22%, #fce9c0 0%, #e8b43c 22%, #d99a1b 58%, #a8741a 100%);
     box-shadow: inset 0 -10px 18px rgba(120,80,20,0.45), inset 0 8px 14px rgba(255,255,255,0.45),
       0 0 0 8px rgba(208,164,55,0.10), 0 16px 40px rgba(0,0,0,0.18), 0 0 40px rgba(217,154,27,0.25);
     transition: transform 0.12s ease, box-shadow 0.12s ease; outline: none;
   }
-  .attack-btn::before { content:""; position:absolute; top:14px; left:38px; width:84px; height:44px; border-radius:50%; background: rgba(255,255,255,0.5); transform: rotate(-18deg); pointer-events: none; }
-  .attack-btn::after { content:""; position:absolute; inset:-9px; border-radius:50%; border:5px dashed rgba(190,150,60,0.4); pointer-events: none; }
+  .attack-btn::before { content:""; position:absolute; top:18px; left:30px; width:92px; height:38px; border-radius:12px; background: rgba(255,255,255,0.5); transform: rotate(-12deg); pointer-events: none; }
+  .attack-btn::after { content:""; position:absolute; inset:-8px; border-radius:24px; border:4px dashed rgba(190,150,60,0.45); pointer-events: none; }
   .attack-btn:hover { transform: scale(1.05); box-shadow: inset 0 -10px 18px rgba(120,80,20,0.45), inset 0 8px 14px rgba(255,255,255,0.45), 0 0 0 8px rgba(208,164,55,0.16), 0 20px 48px rgba(0,0,0,0.22), 0 0 60px rgba(217,154,27,0.4); }
   .attack-btn:active { transform: scale(0.94); }
 
@@ -203,13 +209,13 @@
 
   /* ===== 弹出提示（等级/掉落/解锁）===== */
   @keyframes popMsg { 0%{transform:translate(-50%,-10px) scale(0.6);opacity:0} 20%{opacity:1;transform:translate(-50%,0) scale(1.15)} 80%{opacity:1;transform:translate(-50%,0) scale(1)} 100%{opacity:0;transform:translate(-50%,-20px) scale(0.95)} }
-  .levelup-pop, .drop-pop { position:fixed; top:8%; left:50%; transform:translateX(-50%); font-size:23px; font-weight:900; color:#a8750f; text-shadow:0 0 18px rgba(217,154,27,0.5),0 1px 0 rgba(255,255,255,0.6); animation:popMsg 1.4s ease-out forwards; pointer-events:none; z-index:40; }
+  .levelup-pop, .drop-pop { position:fixed; bottom:130px; left:50%; transform:translateX(-50%); font-size:23px; font-weight:900; color:#a8750f; text-shadow:0 0 18px rgba(217,154,27,0.5),0 1px 0 rgba(255,255,255,0.6); animation:popMsg 1.4s ease-out forwards; pointer-events:none; z-index:40; }
   .drop-pop.full { color:#b3503a; }
 
   /* ===== Toast ===== */
-  .toast-wrap { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 100; pointer-events: none; width: 90%; max-width: 420px; }
+  .toast-wrap { position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 100; pointer-events: none; width: 90%; max-width: 420px; }
   .toast { padding: 10px 18px; border-radius: 8px; background: rgba(60,55,45,0.92); border: 1px solid rgba(190,150,60,0.5); color: #f5efdc; font-size: 14px; font-weight: 700; box-shadow: 0 6px 18px rgba(0,0,0,0.3); animation: toastIn 0.25s ease-out; max-width: 100%; }
-  @keyframes toastIn { from { opacity: 0; transform: translateY(-8px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(8px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
 
   /* ===== 底部系统停靠栏（SAO 风格）===== */
   .dock {
@@ -456,17 +462,34 @@
 
   <!-- ===== 主界面（无需滚动）===== -->
   <div class="game">
-    <!-- 左侧：角色面板（桌面常驻，定位到左上角等级栏正下方） -->
+    <!-- 左侧：角色面板（桌面常驻，已合并底部角色系统的全部功能） -->
     <aside class="main-side side-left" id="homeLeft">
       <div class="side-title">👤 角色</div>
-      <div class="side-attr">
-        <div class="sa-row"><span>攻击</span><b id="saAtk">0</b></div>
-        <div class="sa-row"><span>防御</span><b id="saDef">0</b></div>
-        <div class="sa-row"><span>敏捷</span><b id="saAgi">0</b></div>
-        <div class="sa-row"><span>暴击</span><b id="saCrit">0%</b></div>
-        <div class="sa-row"><span>攻速</span><b id="saSpd">1.0</b></div>
+      <div class="attr-panel">
+        <div class="ap-level">Lv <span id="homeApLevel">1</span> <span id="homeApName" class="ap-name">🌱 新米冒险者</span></div>
+        <div class="ap-stats">
+          <div class="ap-stat">❤ 生命 <b id="homeApHp">0/0</b></div>
+          <div class="ap-stat">⚔ 攻击 <b id="homeApAtk">0</b></div>
+          <div class="ap-stat">🛡 防御 <b id="homeApDef">0</b></div>
+          <div class="ap-stat">💨 敏捷 <b id="homeApAgi">0</b></div>
+          <div class="ap-stat">💥 暴击率 <b id="homeApCrit">0%</b></div>
+          <div class="ap-stat">💢 暴击伤害 <b id="homeApCritDmg">150%</b></div>
+          <div class="ap-stat">💫 吸血 <b id="homeApLifesteal">0%</b></div>
+          <div class="ap-stat">🗡 破甲 <b id="homeApArmorPen">0%</b></div>
+          <div class="ap-stat">⚡ 攻速 <b id="homeApSpd">1.0</b></div>
+          <div class="ap-stat">⭐ 属性点 <b id="homeApPts">0</b></div>
+        </div>
+        <div class="ap-add">
+          <span class="ap-add-title">分配属性点：</span>
+          <button class="attr-btn" data-a="atk">⚔ 攻 +1</button>
+          <button class="attr-btn" data-a="def">🛡 防 +1</button>
+          <button class="attr-btn" data-a="hp">❤ 血 +1</button>
+          <button class="attr-btn reset" data-a="reset">♻️ 重置</button>
+        </div>
+        <div class="sec-title">🎒 装备栏</div>
+        <div class="equip-grid" id="homeEquipGrid"></div>
+        <div class="equip-legend" id="homeEquipLegend"></div>
       </div>
-      <div class="side-equip" id="homeEquip"></div>
     </aside>
 
     <!-- 战斗行（怪物面板 + 攻击按钮并排铺满）-->
@@ -632,7 +655,7 @@
     <div class="sys-window" id="sys-set">
       <div class="sys-window-title">⚙️ 设置 <button class="sys-close" data-close="sys-set">✕</button></div>
       <div class="set-row">
-        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.2.2</div></div>
+        <div><div class="set-desc" style="color:#8a6d2a;font-size:13px;font-weight:800">📢 系统公告</div><div class="set-desc" style="margin-top:2px">查看游戏更新记录 · 当前版本 v0.2.3</div></div>
         <button id="announceBtn" class="set-toggle">查看</button>
       </div>
       <div class="set-row">
@@ -646,7 +669,7 @@
     </div>
     <!-- 系统公告 -->
     <div class="sys-window" id="sys-announce">
-      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.2.2</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
+      <div class="sys-window-title">📢 系统公告 <span class="ver-tag">v0.2.3</span> <button class="sys-close" data-close="sys-announce">✕</button></div>
       <div class="announce-list" id="announceList"></div>
     </div>
   </div>
@@ -657,8 +680,9 @@
   const SAVE_KEY = 'clicker_save';
 
   // ===== 系统公告 / 版本 =====
-  const GAME_VERSION = '0.2.2';
+  const GAME_VERSION = '0.2.3';
   const PATCH_NOTES = [
+    { version: '0.2.3', title: '装备对比升级', desc: '悬停背包或商店装备进行对比时，主界面左侧角色属性栏会同步以「绿色＋/红色－」实时标注各项属性的增减变化，让换装收益更直观' },
     { version: '0.2.2', title: '主界面三栏布局', desc: '电脑端主界面重构：左侧常驻角色面板（属性概览+已穿戴装备）、中间战斗区、右侧常驻背包栏，与角色对称显示；手机端仍使用底部弹窗' },
     { version: '0.2.1', title: '装备对比与穿戴优化', desc: '主界面新增装备对比区（左已穿戴/右悬停预览）；背包/商店装备鼠标悬停实时对比；背包装备右键弹出「穿戴/出售」菜单' },
     { version: '0.2.0', title: '装备系统重构', desc: '装备新增四维前缀（力量/敏捷/防御/血量）与后缀词条（暴击、吸血、破甲等）；敏捷提升闪避与攻速；暴击/吸血/破甲接入战斗；词条数量随层数与品质提升，满层最多 8 条（大版本，旧装备已重置）' },
@@ -857,7 +881,8 @@
   const cmpEquipSlotEl = $('cmpEquipSlot');
   const cmpPrevSlotEl = $('cmpPrevSlot');
   // 主界面侧栏（桌面）
-  const homeEquipEl = $('homeEquip');
+  const homeEquipGridEl = $('homeEquipGrid');
+  const homeEquipLegendEl = $('homeEquipLegend');
   const homeInvEl = $('homeInv');
   const homeInvCountEl = $('homeInvCount');
   // 右侧栏背包（合并自底部背包浮窗）：独立 id 以便与浮窗并存
@@ -866,29 +891,8 @@
   const homeSellAllBtn = $('homeSellAllBtn');
   const homeSellTypeEl = $('homeSellType');
 
-  // 渲染主界面左侧角色栏（属性概览 + 已穿戴装备列表）
+  // 主界面侧栏（桌面）刷新：属性/装备已由 renderPlayerPanel 与 renderEquip 一并渲染，此处不再重复
   function renderHomeSide() {
-    const upd = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
-    upd('saAtk', Math.round(playerAttack()));
-    upd('saDef', Math.round(playerDefense()));
-    upd('saAgi', Math.round(playerAgility()));
-    upd('saCrit', Math.round(playerCrit()) + '%');
-    upd('saSpd', playerAttackSpeed().toFixed(1));
-    // 左侧已穿戴列表
-    if (homeEquipEl) {
-      homeEquipEl.innerHTML = '';
-      SLOTS.forEach(s => {
-        const it = equipped[s.part];
-        const row = document.createElement('div');
-        row.className = 'se-row';
-        const icon = SLOTS.find(x => x.part === s.part).svg;
-        row.innerHTML = (it
-          ? '<span>' + icon + '</span><span class="se-cost">' + qualityName(it.q) + '·' + s.part + '</span><span>' + (it.str||0) + '力</span>'
-          : '<span>' + icon + '</span><span class="se-cost">' + s.part + '</span><span style="color:#b0aca4">空</span>');
-        homeEquipEl.appendChild(row);
-      });
-    }
-    // 右侧背包网格由 renderInv() 一并渲染（见 paintInv）
   }
 
   // 渲染一件装备到对比槽（base=已穿戴, peek=悬停）
@@ -908,6 +912,65 @@
     const worn = equippedFor ? equipped[equippedFor] : null;
     fillCmpSlot(cmpEquipSlotEl, worn, false);
     fillCmpSlot(cmpPrevSlotEl, cmpPrevItem, true);
+    applyAttrDeltas();   // 同步刷新左侧角色属性栏的增减高亮
+  }
+
+  // ===== 装备对比：角色属性增减高亮（加绿 / 减红）=====
+  // 汇总一套装备映射下的玩家属性（用于模拟「穿上某件候选装备」后的结果）
+  function computeStatsOf(equipMap) {
+    const e = { str:0, agi:0, def:0, hp:0, critRate:0, critDmg:0, lifesteal:0, armorPen:0 };
+    SLOTS.forEach(p => {
+      const it = equipMap[p.part];
+      if (!it) return;
+      e.str += it.str; e.agi += it.agi; e.def += it.def; e.hp += it.hp;
+      (it.suffix || []).forEach(([k, v]) => { if (e[k] !== undefined) e[k] += v; });
+    });
+    const agi = Math.max(0, e.agi);
+    return {
+      hpMax: Math.round(60 + e.hp + playerLevel * 10 + attrBonus.hp * 15),
+      atk: Math.round(Math.max(1, 2 + e.str + playerLevel * 2 + attrBonus.atk * 3)),
+      def: Math.round(Math.max(0, e.def + attrBonus.def * 2)),
+      agi: Math.round(agi),
+      crit: Math.min(100, e.critRate),
+      critDmg: Math.round(150 + e.critDmg),
+      lifesteal: Math.min(100, e.lifesteal),
+      armorPen: Math.min(100, e.armorPen),
+      spd: Math.min(5, 1 + agi / 100 * 0.1)
+    };
+  }
+  function currentEquipMap() {
+    const m = {};
+    SLOTS.forEach(p => { if (equipped[p.part]) m[p.part] = equipped[p.part]; });
+    return m;
+  }
+  // 在左侧角色属性栏每个属性值旁追加悬停对比的增减标记（加绿 / 减红）
+  function applyAttrDeltas() {
+    const fields = [
+      { id: 'homeApHp',        key: 'hpMax',     now: () => playerMaxHp() },
+      { id: 'homeApAtk',       key: 'atk',       now: () => playerAttack() },
+      { id: 'homeApDef',       key: 'def',       now: () => playerDefense() },
+      { id: 'homeApAgi',       key: 'agi',       now: () => playerAgility() },
+      { id: 'homeApCrit',      key: 'crit',      now: () => playerCrit() },
+      { id: 'homeApCritDmg',   key: 'critDmg',   now: () => playerCritDmg() },
+      { id: 'homeApLifesteal', key: 'lifesteal', now: () => playerLifesteal() },
+      { id: 'homeApArmorPen',  key: 'armorPen',  now: () => playerArmorPen() },
+      { id: 'homeApSpd',       key: 'spd',       now: () => playerAttackSpeed() }
+    ];
+    let cand = null;
+    if (cmpPrevItem) { const m = currentEquipMap(); m[cmpPrevItem.part] = cmpPrevItem; cand = computeStatsOf(m); }
+    fields.forEach(f => {
+      const el = document.getElementById(f.id);
+      if (!el) return;
+      const oldTag = el.querySelector('.attr-diff');
+      if (oldTag) oldTag.remove();
+      if (!cand) return;
+      const d = Math.round(cand[f.key] - f.now());
+      if (d === 0) return;
+      const tag = document.createElement('span');
+      tag.className = 'attr-diff ' + (d > 0 ? 'up' : 'down');
+      tag.textContent = (d > 0 ? '+' : '') + d;
+      el.appendChild(tag);
+    });
   }
   // 右键菜单（背包格）
   const invMenuEl = document.createElement('div');
@@ -1303,26 +1366,39 @@
   }
 
   // ===== 装备栏 + 背包 =====
-  SLOTS.forEach(s => {
-    const el = document.createElement('div');
-    el.className = 'equip-slot';
-    el.dataset.part = s.part;
-    el.innerHTML = '<span class="eq-frame"><span class="eq-icon">' + s.svg + '</span></span><span class="eq-main">' +
-      '<span class="eq-part"></span><span class="eq-q">空</span><span class="eq-dmg">—</span></span>';
-    equipGrid.appendChild(el);
-  });
+  // 初始化装备网格（背包浮窗 + 主界面左侧栏两处）
+  function initEquipGrid(gridEl) {
+    if (!gridEl) return;
+    gridEl.innerHTML = '';
+    SLOTS.forEach(s => {
+      const el = document.createElement('div');
+      el.className = 'equip-slot';
+      el.dataset.part = s.part;
+      el.innerHTML = '<span class="eq-frame"><span class="eq-icon">' + s.svg + '</span></span><span class="eq-main">' +
+        '<span class="eq-part"></span><span class="eq-q">空</span><span class="eq-dmg">—</span></span>';
+      gridEl.appendChild(el);
+    });
+  }
+  initEquipGrid(equipGrid);
+  initEquipGrid(homeEquipGridEl);
 
   function renderEquip() {
-    SLOTS.forEach(s => {
-      const el = equipGrid.querySelector('[data-part="' + s.part + '"]');
-      const it = equipped[s.part];
-      el.className = 'equip-slot' + (it ? ' equipped q' + it.q : '');
-      el.querySelector('.eq-part').textContent = it ? qualityName(it.q) + ' ' + s.part + (it.level ? ' Lv' + it.level : '') : '空 · ' + s.part;
-      el.querySelector('.eq-frame').className = 'eq-frame' + (it ? ' f' + it.q : '');
-      el.querySelector('.eq-q').textContent = it ? itemStats(it) : '待装备';
-      el.querySelector('.eq-dmg').textContent = it ? '词条 ' + (it.suffix ? it.suffix.length : 0) + '/' + maxAffixCount(it.level || 1) : '—';
+    [equipGrid, homeEquipGridEl].forEach(grid => {
+      if (!grid) return;
+      SLOTS.forEach(s => {
+        const el = grid.querySelector('[data-part="' + s.part + '"]');
+        if (!el) return;
+        const it = equipped[s.part];
+        el.className = 'equip-slot' + (it ? ' equipped q' + it.q : '');
+        el.querySelector('.eq-part').textContent = it ? qualityName(it.q) + ' ' + s.part + (it.level ? ' Lv' + it.level : '') : '空 · ' + s.part;
+        el.querySelector('.eq-frame').className = 'eq-frame' + (it ? ' f' + it.q : '');
+        el.querySelector('.eq-q').textContent = it ? itemStats(it) : '待装备';
+        el.querySelector('.eq-dmg').textContent = it ? '词条 ' + (it.suffix ? it.suffix.length : 0) + '/' + maxAffixCount(it.level || 1) : '—';
+      });
     });
-    equipLegendEl.textContent = '攻击 ' + Math.round(playerAttack()) + ' ｜ 敏捷 ' + Math.round(playerAgility()) + ' ｜ 暴击 ' + Math.round(playerCrit()) + '%';
+    const legend = '攻击 ' + Math.round(playerAttack()) + ' ｜ 敏捷 ' + Math.round(playerAgility()) + ' ｜ 暴击 ' + Math.round(playerCrit()) + '%';
+    if (equipLegendEl) equipLegendEl.textContent = legend;
+    if (homeEquipLegendEl) homeEquipLegendEl.textContent = legend;
   }
 
   function wearItem(uid) {
@@ -1447,22 +1523,34 @@
     renderPlayerPanel();
   }
 
-  // 更新角色状态栏（生命 / 攻击 / 防御 / 属性点）
+  // 更新角色状态栏（生命 / 攻击 / 防御 / 属性点）——同时刷新左上角浮窗与主界面左侧角色面板
   function renderPlayerPanel() {
     playerHpMax = playerMaxHp();
     if (playerHp > playerHpMax) playerHp = playerHpMax;
     if (playerHp < 0) playerHp = 0;
-    // 左上角便捷 HP
-    const hpEl = document.getElementById('plHpText');
-    if (hpEl) hpEl.textContent = Math.round(playerHp) + '/' + playerHpMax;
-    // 属性浮窗数据
-    const apMap = { apHp: Math.round(playerHp) + '/' + playerHpMax, apAtk: Math.round(playerAttack()), apDef: Math.round(playerDefense()), apPts: attrPoints, apLevel: playerLevel, apName: titleFor(playerLevel), apAgi: Math.round(playerAgility()), apCrit: Math.round(playerCrit()) + '%' };
-    for (const k in apMap) { const el = document.getElementById(k); if (el) el.textContent = apMap[k]; }
-    // 加点/重置按钮可用性
+    const hp = Math.round(playerHp) + '/' + playerHpMax;
+    const vals = {
+      plHpText: hp,
+      apHp: hp,        homeApHp: hp,
+      apAtk: Math.round(playerAttack()),       homeApAtk: Math.round(playerAttack()),
+      apDef: Math.round(playerDefense()),      homeApDef: Math.round(playerDefense()),
+      apAgi: Math.round(playerAgility()),      homeApAgi: Math.round(playerAgility()),
+      apCrit: Math.round(playerCrit()) + '%',  homeApCrit: Math.round(playerCrit()) + '%',
+      homeApCritDmg: Math.round(playerCritDmg()) + '%',
+      homeApLifesteal: Math.round(playerLifesteal()) + '%',
+      homeApArmorPen: Math.round(playerArmorPen()) + '%',
+      apPts: attrPoints,                       homeApPts: attrPoints,
+      apLevel: playerLevel,                    homeApLevel: playerLevel,
+      apName: titleFor(playerLevel),           homeApName: titleFor(playerLevel),
+                                               homeApSpd: playerAttackSpeed().toFixed(1)
+    };
+    for (const k in vals) { const el = document.getElementById(k); if (el) el.textContent = vals[k]; }
+    // 加点/重置按钮可用性（浮窗 + 左侧栏所有按钮）
     document.querySelectorAll('.attr-btn:not([data-a="reset"])').forEach(b => { b.disabled = attrPoints <= 0; });
     const resetBtn = document.querySelector('.attr-btn[data-a="reset"]');
     const hasPoints = (attrPoints + attrBonus.atk + attrBonus.def + attrBonus.hp) > 0;
     if (resetBtn) resetBtn.disabled = !hasPoints;
+    applyAttrDeltas();   // 属性值刷新后，保留/重建悬停对比的增减高亮
   }
 
   // 分配属性点：atk/def/hp
@@ -1474,7 +1562,31 @@
     playClick();
     renderPlayerPanel();
   }
-  document.querySelectorAll('.attr-btn').forEach(b => b.addEventListener('click', () => addAttr(b.dataset.a)));
+  // 长按加点：按住持续加点，随按住时长越来越快（速度递增）
+  let attrHoldTimer = null, attrHoldDelay = 0;
+  const ATTR_HOLD_START = 220;  // 起始间隔 ms（较慢开场）
+  const ATTR_HOLD_MIN   = 20;   // 最快间隔 ms（封顶，避免过快）
+  const runAttrHold = (b) => {
+    if (b.disabled) { stopAttrHold(); return; }
+    addAttr(b.dataset.a);
+    attrHoldDelay = Math.max(ATTR_HOLD_MIN, Math.round(attrHoldDelay * 0.86)); // 每次加快约 14%
+    attrHoldTimer = setTimeout(() => runAttrHold(b), attrHoldDelay);
+  };
+  function stopAttrHold() { if (attrHoldTimer) { clearTimeout(attrHoldTimer); attrHoldTimer = null; } }
+  document.querySelectorAll('.attr-btn').forEach(b => {
+    // 重置按钮：单击一次即可，不启用长按
+    if (b.dataset.a === 'reset') { b.addEventListener('click', () => addAttr('reset')); return; }
+    // 加点按钮：按下先加一点，随后持续加点并逐步加速
+    b.addEventListener('mousedown', () => {
+      if (b.disabled) return;
+      addAttr(b.dataset.a);
+      stopAttrHold();
+      attrHoldDelay = ATTR_HOLD_START;
+      attrHoldTimer = setTimeout(() => runAttrHold(b), attrHoldDelay);
+    });
+  });
+  // 松开 / 移出 / 失焦 / 右键时停止长按
+  ['mouseup', 'mouseleave', 'blur', 'contextmenu'].forEach(ev => document.addEventListener(ev, stopAttrHold));
 
   // 战斗偏好开关
   // 战斗偏好：击败后自动进入下一层（回满状态为常驻，无需开关）
